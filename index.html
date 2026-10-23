@@ -3,339 +3,534 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ระบบจองเวรพยาบาลออนไลน์ - ภาพรวม</title>
-    <!-- Tailwind CSS & FontAwesome -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>ระบบจองเวรพยาบาลออนไลน์ หอผู้ป่วยอุบัติเหตุ 2 ( Realtime)</title>
+    <!-- Tailwind CSS สำหรับ Responsive Design -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <!-- FontAwesome สำหรับสัญลักษณ์ไอคอน -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Firebase SDK (Compat Version) -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
     <style>
-        .badge-morning { background-color: #fffbeb; color: #b45309; border-left: 3px solid #f59e0b; }
-        .badge-afternoon { background-color: #f0fdf4; color: #166534; border-left: 3px solid #22c55e; }
-        .badge-night { background-color: #f5f3ff; color: #5b21b6; border-left: 3px solid #8b5cf6; }
-        .badge-off { background-color: #f8fafc; color: #475569; border-left: 3px solid #94a3b8; }
+        @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Sarabun', sans-serif; }
     </style>
 </head>
-<body class="bg-slate-100 text-slate-800 min-h-screen">
+<body class="bg-slate-50 text-slate-800 min-h-screen">
 
-    <div class="max-w-7xl mx-auto p-4">
+    <div class="max-w-7xl mx-auto px-4 py-6">
         <!-- Header -->
-        <header class="bg-indigo-600 text-white p-6 rounded-2xl shadow-lg mb-6 flex flex-col md:flex-row justify-between items-center gap-4">
+        <header class="bg-gradient-to-r from-blue-600 to-teal-500 rounded-2xl p-6 shadow-md text-white mb-6 flex flex-col md:flex-row justify-between items-center gap-4">
             <div>
-                <h1 class="text-2xl font-bold flex items-center gap-2"><i class="fa-solid fa-table-list"></i> ระบบจองเวรพยาบาลออนไลน์ (ระบบภาพรวม)</h1>
-                <p class="text-indigo-100 text-sm mt-1">แสดงผลแบ่งกลุ่มเวรเรียลไทม์ จำกัดเวรละ 4 คน</p>
+                <h1 class="text-2xl md:text-3xl font-bold flex items-center gap-2">
+                    <i class="fa-solid fa-user-nurse"></i> ระบบจองเวรพยาบาลออนไลน์ หอผู้ป่วยอุบัติเหตุ 2
+                </h1>
+                <p class="text-blue-100 text-sm mt-1"></p>
             </div>
-            <div class="flex items-center gap-2">
-                <span id="regStatusBadge" class="px-3 py-1 text-xs font-bold rounded-full bg-green-100 text-green-800">กำลังเปิดลงทะเบียน</span>
-                <button onclick="toggleAdminModal(true)" class="bg-indigo-800 hover:bg-indigo-900 px-4 py-2 rounded-lg text-sm transition font-medium">
-                    <i class="fa-solid fa-gear"></i> ผู้ดูแลระบบ
-                </button>
+            
+            <!-- สถานะระบบ -->
+            <div id="system-status-badge" class="bg-white/20 px-4 py-2 rounded-full text-sm font-medium backdrop-blur-xs flex items-center gap-2">
+                <span class="w-3 h-3 rounded-full bg-green-400 animate-pulse"></span> ระบบเปิดลงทะเบียน
             </div>
         </header>
 
-        <!-- Main Content -->
-        <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-6">
-            <!-- Form Card -->
-            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 lg:col-span-1 h-fit">
-                <h2 class="text-lg font-bold mb-4 flex items-center gap-2 text-slate-700"><i class="fa-solid fa-pen-to-square"></i> ลงทะเบียนจองเวร</h2>
-                <div id="bookingForm" class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium text-slate-600 mb-1">ชื่อ-นามสกุล / ชื่อเล่น</label>
-                        <input type="text" id="nurseName" placeholder="ระบุชื่อของคุณ" class="w-full border border-slate-300 rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+        <!-- โซนควบคุมแอดมิน & ตัวเลือกเดือน/ปี -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+            <!-- ตัวเลือกเดือน/ปี (เปลี่ยนได้ไม่จำกัด) -->
+            <div class="bg-white p-4 rounded-xl shadow-xs border border-slate-200 flex flex-wrap gap-4 items-center justify-between lg:col-span-2">
+                <div class="flex items-center gap-2 flex-wrap">
+                    <label class="font-semibold text-slate-700">เลือกช่วงเวลา:</label>
+                    <select id="select-month" class="bg-slate-100 border border-slate-300 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500" onchange="changeCalendarDate()"></select>
+                    <!-- ปรับเป็นกล่องกรอกตัวเลขปี พ.ศ. เพื่อให้เปลี่ยนได้ไม่จำกัดและพิมพ์ค้นหาปีที่ต้องการได้ทันที -->
+                    <div class="flex items-center gap-1 bg-slate-100 border border-slate-300 rounded-lg px-2 py-1">
+                        <span class="text-xs text-slate-500">พ.ศ.</span>
+                        <input type="number" id="input-year" class="w-20 bg-transparent text-center font-medium focus:outline-none" onchange="changeCalendarDate()" min="1" value="2569">
                     </div>
-                    <div>
-                        <label class="block text-sm font-medium text-slate-600 mb-1">เลือกวันที่</label>
-                        <input type="date" id="shiftDate" class="w-full border border-slate-300 rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-slate-600 mb-1">เลือกเวร (จำกัด 4 คน/เวร)</label>
-                        <select id="shiftType" class="w-full border border-slate-300 rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                            <option value="เช้า">☀️ เวรเช้า (08:00 - 16:00)</option>
-                            <option value="บ่าย">⛅ เวรบ่าย (16:00 - 24:00)</option>
-                            <option value="ดึก">🌙 เวรดึก (00:00 - 08:00)</option>
-                            <option value="OFF">🏖️ OFF (วันหยุด)</option>
-                        </select>
-                    </div>
-                    <button onclick="submitBooking()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-xl transition flex justify-center items-center gap-2 shadow-md shadow-indigo-200">
-                        <i class="fa-solid fa-check"></i> บันทึกการจองเวร
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="navigateMonth(-1)" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-lg transition" title="เดือนก่อนหน้า"><i class="fa-solid fa-chevron-left"></i></button>
+                    <button onclick="setToday()" class="bg-blue-50 hover:bg-blue-100 text-blue-600 px-4 py-1.5 rounded-lg font-medium transition">เดือนปัจจุบัน</button>
+                    <button onclick="navigateMonth(1)" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-lg transition" title="เดือนถัดไป"><i class="fa-solid fa-chevron-right"></i></button>
+                </div>
+            </div>
+
+            <!-- เมนูผู้ดูแลระบบ -->
+            <div class="bg-white p-4 rounded-xl shadow-xs border border-slate-200">
+                <h3 class="font-semibold text-slate-700 mb-2 flex items-center gap-2">
+                    <i class="fa-solid fa-lock text-amber-500"></i> แผงควบคุมระบบ (สำหรับ ADMIN เท่านั้น)
+                </h3>
+                <div class="flex gap-2">
+                    <button onclick="toggleSystemRegistration()" class="flex-1 bg-slate-800 hover:bg-slate-900 text-white text-xs py-2 px-3 rounded-lg transition flex items-center justify-center gap-1">
+                        <i id="reg-toggle-icon" class="fa-solid fa-toggle-on"></i> <span id="reg-toggle-text">ปิดระบบจอง</span>
                     </button>
-                </div>
-                <div id="closedMessage" class="hidden text-center py-8 text-red-500 font-semibold bg-red-50 rounded-xl p-4 border border-red-100">
-                    ⚠️ ระบบปิดรับลงทะเบียนในขณะนี้
-                </div>
-            </div>
-
-            <!-- Dashboard Calendar Card -->
-            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 lg:col-span-3">
-                <div class="flex flex-col sm:flex-row justify-between items-center mb-6 gap-2">
-                    <h2 class="text-lg font-bold flex items-center gap-2 text-slate-700"><i class="fa-solid fa-calendar-days"></i> ตารางภาพรวมเวรประจำเดือน</h2>
-                    <div class="flex gap-2">
-                        <button onclick="changeMonth(-1)" class="p-2 hover:bg-slate-100 rounded-lg text-slate-600"><i class="fa-solid fa-chevron-left"></i></button>
-                        <span id="currentMonthYear" class="font-bold text-slate-700 min-w-[140px] text-center pt-1 text-base"></span>
-                        <button onclick="changeMonth(1)" class="p-2 hover:bg-slate-100 rounded-lg text-slate-600"><i class="fa-solid fa-chevron-right"></i></button>
-                    </div>
-                </div>
-
-                <!-- Calendar Grid Header -->
-                <div class="grid grid-cols-7 gap-2 text-center font-bold text-sm text-slate-500 mb-2 border-b pb-2">
-                    <div class="text-rose-500">อา.</div><div>จ.</div><div>อ.</div><div>พ.</div><div>พฤ.</div><div>ศ.</div><div class="text-sky-600">ส.</div>
-                </div>
-                <div id="calendarGrid" class="grid grid-cols-7 gap-2">
-                    <!-- Days dynamically injected here -->
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Info Detail Modal -->
-    <div id="detailModal" class="fixed inset-0 bg-black/50 hidden z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-xl space-y-4">
-            <div class="flex justify-between items-center border-b pb-3">
-                <h3 class="text-lg font-bold text-slate-800"><i class="fa-solid fa-circle-info text-indigo-500"></i> รายละเอียดผู้ลงเวร</h3>
-                <button onclick="toggleDetailModal(false)" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-xl"></i></button>
-            </div>
-            <div class="space-y-3 py-2">
-                <div class="flex justify-between items-center bg-slate-50 p-3 rounded-xl">
-                    <span class="text-sm text-slate-500 font-medium">ชื่อผู้ลงเวร:</span>
-                    <span id="modalNurseName" class="text-base font-bold text-slate-800"></span>
-                </div>
-                <div class="flex justify-between items-center bg-slate-50 p-3 rounded-xl">
-                    <span class="text-sm text-slate-500 font-medium">วันที่:</span>
-                    <span id="modalShiftDate" class="text-sm font-semibold text-slate-700"></span>
-                </div>
-                <div class="flex justify-between items-center bg-slate-50 p-3 rounded-xl">
-                    <span class="text-sm text-slate-500 font-medium">ช่วงเวลาเวร:</span>
-                    <span id="modalShiftType" class="px-3 py-1 text-xs font-bold rounded-full"></span>
-                </div>
-                <div class="pt-2 border-t">
-                    <label class="block text-xs font-medium text-slate-500 mb-1">กรอกรหัสผ่านเพื่อยกเลิกเวรนี้</label>
-                    <input type="password" id="cancelPassInput" placeholder="รหัสผ่านยกเลิกเวร" class="w-full border border-slate-300 rounded-xl p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-rose-500">
-                </div>
-            </div>
-            <div class="flex gap-2 pt-2">
-                <button onclick="deleteCurrentBooking()" class="flex-1 bg-rose-50 hover:bg-rose-100 text-rose-600 font-semibold py-2.5 rounded-xl text-sm transition flex justify-center items-center gap-2 border border-rose-200">
-                    <i class="fa-solid fa-trash-can"></i> ยืนยันยกเลิกเวร
-                </button>
-                <button onclick="toggleDetailModal(false)" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold py-2.5 rounded-xl text-sm transition">
-                    ปิด
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Admin Panel Modal -->
-    <div id="adminModal" class="fixed inset-0 bg-black/50 hidden z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl space-y-4">
-            <div class="flex justify-between items-center border-b pb-3">
-                <h3 class="text-xl font-bold text-slate-800"><i class="fa-solid fa-lock"></i> เมนูผู้ดูแลระบบ</h3>
-                <button onclick="toggleAdminModal(false)" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-xl"></i></button>
-            </div>
-            <div class="space-y-3">
-                <div>
-                    <label class="block text-sm font-medium text-slate-600 mb-1">รหัสผ่านผู้ดูแลระบบ</label>
-                    <input type="password" id="adminPass" placeholder="กรอกรหัสผ่านเพื่อสั่งการ" class="w-full border border-slate-300 rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                </div>
-                <div class="pt-2 border-t space-y-2">
-                    <label class="block text-sm font-medium text-slate-600">จัดการระบบลงทะเบียน</label>
-                    <div class="flex gap-2">
-                        <button onclick="setRegistrationStatus(true)" class="flex-1 bg-green-500 hover:bg-green-600 text-white font-semibold py-2.5 rounded-xl text-sm transition">เปิดระบบ</button>
-                        <button onclick="setRegistrationStatus(false)" class="flex-1 bg-amber-500 hover:bg-amber-600 text-white font-semibold py-2.5 rounded-xl text-sm transition">ปิดระบบ</button>
-                    </div>
-                </div>
-                <div class="pt-2 border-t">
-                    <button onclick="clearAllData()" class="w-full bg-red-500 hover:bg-red-600 text-white font-semibold py-3 rounded-xl text-sm transition flex justify-center items-center gap-2">
-                        <i class="fa-solid fa-trash-can"></i> ล้างข้อมูลตารางเวรทั้งหมด
+                    <button onclick="clearAllDataWithAuth()" class="flex-1 bg-rose-500 hover:bg-rose-600 text-white text-xs py-2 px-3 rounded-lg transition flex items-center justify-center gap-1">
+                        <i class="fa-solid fa-trash-can"></i> ล้างข้อมูลคลาวด์
                     </button>
                 </div>
             </div>
         </div>
+
+        <!-- ความหมายสัญลักษณ์เวร -->
+        <div class="bg-slate-100 p-3 rounded-xl mb-4 flex flex-wrap gap-4 text-xs font-medium justify-center border border-slate-200">
+            <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-amber-500 inline-block"></span> เช้า (M)</span>
+            <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-orange-500 inline-block"></span> บ่าย (A)</span>
+            <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-indigo-600 inline-block"></span> ดึก (N)</span>
+            <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-emerald-500 inline-block"></span> วันหยุด (OFF)</span>
+            <span class="text-slate-500">(*หมายเหตุ* จำกัดเวรละไม่เกิน 4 คน)</span>
+        </div>
+
+        <!-- ปฏิทินแสดงผลภาพรวมแบบจัดกลุ่ม -->
+        <div class="bg-white rounded-2xl shadow-md border border-slate-200 overflow-hidden mb-8">
+            <div class="grid grid-cols-7 bg-slate-100 text-center font-semibold text-slate-600 text-xs md:text-sm py-3 border-b border-slate-200">
+                <div class="text-rose-500">อาทิตย์</div>
+                <div>จันทร์</div>
+                <div>อังคาร</div>
+                <div>พุธ</div>
+                <div>พฤหัสฯ</div>
+                <div>ศุกร์</div>
+                <div class="text-blue-600">เสาร์</div>
+            </div>
+            <div id="calendar-days" class="grid grid-cols-7 grid-flow-row divide-x divide-y divide-slate-200 bg-slate-100">
+                <!-- โหลดด้วย JavaScript -->
+            </div>
+        </div>
     </div>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getDatabase, ref, set, push, onValue, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
-
-        // CONFIG: เปลี่ยนเป็นข้อมูลฐานข้อมูล Firebase ของคุณ
-        const firebaseConfig = {
-          apiKey: "AIzaSyCHsvdhqucG9byQxZE47AxRb8v4bezVJU0",
-          authDomain: "nurse-db-cbc9c.firebaseapp.com",
-          databaseURL: "https://nurse-db-cbc9c-default-rtdb.asia-southeast1.firebasedatabase.app",
-          projectId: "nurse-db-cbc9c",
-          storageBucket: "nurse-db-cbc9c.firebasestorage.app",
-          messagingSenderId: "285296416812",
-          appId: "1:285296416812:web:224fbb88b399e986bdd989",
-          measurementId: "G-LLSP2BJX0V"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const db = getDatabase(app);
-
-        // Security Configurations
-        const ADMIN_PASSWORD = "NURSE1234"; 
-        const CANCEL_PASSWORD = "CANCEL1234";  
-        
-        let currentUrlDate = new Date();
-        let currentMonth = currentUrlDate.getMonth();
-        let currentYear = currentUrlDate.getFullYear();
-        let allBookings = {};
-        let configSystem = { open: true };
-        let selectedBookingId = null;
-
-        window.toggleAdminModal = (show) => document.getElementById('adminModal').classList.toggle('hidden', !show);
-        window.toggleDetailModal = (show) => {
-            document.getElementById('detailModal').classList.toggle('hidden', !show);
-            if(!show) document.getElementById('cancelPassInput').value = '';
-        };
-
-        // Sync System Status
-        onValue(ref(db, 'system_config'), (snapshot) => {
-            const val = snapshot.val();
-            if (val) {
-                configSystem = val;
-                document.getElementById('bookingForm').classList.toggle('hidden', !val.open);
-                document.getElementById('closedMessage').classList.toggle('hidden', val.open);
-                const badge = document.getElementById('regStatusBadge');
-                badge.innerText = val.open ? "กำลังเปิดลงทะเบียน" : "ปิดระบบชั่วคราว";
-                badge.className = val.open ? "px-3 py-1 text-xs font-bold rounded-full bg-green-100 text-green-800" : "px-3 py-1 text-xs font-bold rounded-full bg-red-100 text-red-800";
-            }
-        });
-
-        // Sync Data
-        onValue(ref(db, 'bookings'), (snapshot) => {
-            allBookings = snapshot.val() || {};
-            renderCalendar();
-        });
-
-        window.showBookingDetail = (id) => {
-            const booking = allBookings[id];
-            if (!booking) return;
-            selectedBookingId = id;
-            document.getElementById('modalNurseName').innerText = booking.name;
-            document.getElementById('modalShiftDate').innerText = new Date(booking.date).toLocaleDateString('th-TH', { day: 'numeric', month: 'long', year: 'numeric' });
+    <!-- Modal ฟอร์มจัดการเวรประจำวัน -->
+    <div id="booking-modal" class="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center hidden p-4 z-50">
+        <div class="bg-white rounded-2xl shadow-xl max-w-lg w-full overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+            <div class="bg-gradient-to-r from-blue-600 to-blue-500 text-white px-6 py-4 flex justify-between items-center">
+                <h3 class="font-bold text-lg" id="modal-date-title">จัดการข้อมูลเวรประจำวัน</h3>
+                <button onclick="closeModal()" class="text-white/80 hover:text-white text-xl"><i class="fa-solid fa-xmark"></i></button>
+            </div>
             
-            const badge = document.getElementById('modalShiftType');
-            badge.innerText = `เวร${booking.shift}`;
-            badge.className = `px-3 py-1 text-xs font-bold rounded-full badge-${booking.shift === 'เช้า' ? 'morning' : booking.shift === 'บ่าย' ? 'afternoon' : booking.shift === 'ดึก' ? 'night' : 'off'}`;
-            toggleDetailModal(true);
+            <div class="p-6">
+                <!-- ฟอร์มเพิ่มผู้จองเวร -->
+                <div id="registration-form-section" class="mb-6 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                    <h4 class="font-semibold text-sm text-slate-700 mb-3"><i class="fa-solid fa-user-plus text-blue-500"></i> ลงทะเบียนจองเวรใหม่</h4>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+                        <div>
+                            <label class="block text-xs font-medium text-slate-600 mb-1">ชื่อผู้จอง</label>
+                            <input type="text" id="nurse-name" placeholder="ระบุชื่อ-นามสกุล" class="w-full text-sm border border-slate-300 rounded-lg px-3 py-2 bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-600 mb-1">เลือกกะ/เวร</label>
+                            <select id="shift-type" class="w-full text-sm border border-slate-300 rounded-lg px-3 py-2 bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                                <option value="เช้า">☀️ เวรเช้า (M)</option>
+                                <option value="บ่าย">⛅ เวรบ่าย (A)</option>
+                                <option value="ดึก">🌙 เวรดึก (N)</option>
+                                <option value="off">🏖️ วันหยุด (OFF)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button onclick="addBooking()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm py-2 rounded-lg transition shadow-xs">
+                        ยืนยันการจองเวร
+                    </button>
+                </div>
+
+                <!-- รายชื่อผู้จองเวรแยกกลุ่มชัดเจนใน Modal -->
+                <div>
+                    <h4 class="font-semibold text-sm text-slate-700 mb-3">
+                        <i class="fa-solid fa-list-ul text-slate-500"></i> รายชื่อผู้จองแบ่งตามกลุ่มเวรในวันนี้
+                    </h4>
+                    <div id="modal-bookings-list" class="space-y-3 max-h-64 overflow-y-auto pr-1">
+                        <!-- โหลดข้อมูลแบบจัดกลุ่มด้วย JavaScript -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // รหัสผ่านสำหรับจัดการระบบ
+        const ADMIN_PIN = "admin1234"; 
+        
+        // ข้อมูลการกำหนดค่าของระบบและออบเจกต์เก็บข้อมูลเวร
+        let systemConfig = { isRegistrationOpen: true };
+        let bookings = {};
+
+        // รายชื่อเดือนภาษาไทย
+        const thaiMonths = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
+        
+        // ดึงปีและเดือนปัจจุบันเริ่มต้น
+        let currentYear = new Date().getFullYear();
+        let currentMonth = new Date().getMonth();
+        let selectedDateStr = ""; 
+
+        // ==========================================
+        // 🔧 ส่วนสำหรับเชื่อมต่อ FIREBASE REALTIME DATABASE 
+        // ==========================================
+        const firebaseConfig = {
+           apiKey: "AIzaSyCHsvdhqucG9byQxZE47AxRb8v4bezVJU0",
+           authDomain: "nurse-db-cbc9c.firebaseapp.com",
+           databaseURL: "https://nurse-db-cbc9c-default-rtdb.asia-southeast1.firebasedatabase.app",
+           projectId: "nurse-db-cbc9c",
+           storageBucket: "nurse-db-cbc9c.firebasestorage.app",
+           messagingSenderId: "285296416812",
+           appId: "1:285296416812:web:224fbb88b399e986bdd989",
+           measurementId: "G-LLSP2BJX0V"
         };
 
-        window.deleteCurrentBooking = () => {
-            if (!selectedBookingId) return;
-            const inputPass = document.getElementById('cancelPassInput').value.trim();
-            if (!inputPass) return alert('กรุณากรอกรหัสผ่านเพื่อยกเลิกเวรด้วยครับ');
-            if (inputPass !== CANCEL_PASSWORD && inputPass !== ADMIN_PASSWORD) return alert('รหัสผ่านไม่ถูกต้อง');
+        let isFirebaseConnected = false;
+        let dbRef = null;
 
-            if (confirm('คุณต้องการยกเลิกตารางเวรนี้ใช่หรือไม่?')) {
-                remove(ref(db, `bookings/${selectedBookingId}`)).then(() => {
-                    alert('ยกเลิกการจองเวรสำเร็จแล้วครับ');
-                    toggleDetailModal(false);
-                    selectedBookingId = null;
-                });
-            }
-        };
-
-        window.submitBooking = () => {
-            const name = document.getElementById('nurseName').value.trim();
-            const dateStr = document.getElementById('shiftDate').value;
-            const shift = document.getElementById('shiftType').value;
-
-            if (!name || !dateStr) return alert('กรุณากรอกชื่อและเลือกวันที่ต้องการลงเวรครับ');
-            if (!configSystem.open) return alert('ขออภัย ระบบปิดรับการลงทะเบียนในขณะนี้');
-
-            let count = Object.values(allBookings).filter(b => b.date === dateStr && b.shift === shift).length;
-            if (count >= 4) return alert(`ขออภัยครับ เวร${shift} ของวันที่ ${dateStr} เต็มโควตา 4 คนแล้วครับ!`);
-
-            const newBookingRef = push(ref(db, 'bookings'));
-            set(newBookingRef, { name, date: dateStr, shift }).then(() => {
-                alert('จองเวรเรียบร้อยแล้วครับ!');
-                document.getElementById('nurseName').value = '';
-            });
-        };
-
-        window.setRegistrationStatus = (isOpen) => {
-            if (document.getElementById('adminPass').value !== ADMIN_PASSWORD) return alert('รหัสผ่านไม่ถูกต้อง');
-            set(ref(db, 'system_config'), { open: isOpen }).then(() => {
-                alert(`เปลี่ยนสถานะระบบสำเร็จ`);
-                toggleAdminModal(false);
-                document.getElementById('adminPass').value = '';
-            });
-        };
-
-        window.clearAllData = () => {
-            if (document.getElementById('adminPass').value !== ADMIN_PASSWORD) return alert('รหัสผ่านไม่ถูกต้อง');
-            if (confirm('คุณต้องการล้างตารางเวรทั้งหมดใช่หรือไม่?')) {
-                remove(ref(db, 'bookings')).then(() => {
-                    alert('ล้างข้อมูลเรียบร้อย');
-                    toggleAdminModal(false);
-                    document.getElementById('adminPass').value = '';
-                });
-            }
-        };
-
-        window.changeMonth = (dir) => {
-            currentMonth += dir;
-            if (currentMonth < 0) { currentMonth = 11; currentYear--; }
-            if (currentMonth > 11) { currentMonth = 0; currentYear++; }
-            renderCalendar();
-        };
-
-        function renderCalendar() {
-            const grid = document.getElementById('calendarGrid');
-            grid.innerHTML = '';
-            const monthNames = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
-            document.getElementById('currentMonthYear').innerText = `${monthNames[currentMonth]} ${currentYear + 543}`;
-
-            const firstDay = new Date(currentYear, currentMonth, 1).getDay();
-            const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
-
-            for (let i = 0; i < firstDay; i++) grid.appendChild(document.createElement('div'));
-
-            for (let day = 1; day <= daysInMonth; day++) {
-                const currentFormatDate = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-                
-                const dayBox = document.createElement('div');
-                dayBox.className = "bg-white border border-slate-200 rounded-xl p-2 min-h-[160px] flex flex-col justify-between shadow-xs";
-                
-                const dayNum = document.createElement('span');
-                dayNum.className = "font-bold text-xs text-slate-400 block mb-2";
-                dayNum.innerText = day;
-                dayBox.appendChild(dayNum);
-
-                const overviewContainer = document.createElement('div');
-                overviewContainer.className = "space-y-1.5 flex-1 flex flex-col justify-start text-[10px]";
-
-                const shifts = ['เช้า', 'บ่าย', 'ดึก', 'OFF'];
-                shifts.forEach(s => {
-                    const shiftList = Object.entries(allBookings).filter(([id, b]) => b.date === currentFormatDate && b.shift === s);
+        // ฟังก์ชันตรวจสอบและเชื่อมต่อฐานข้อมูล
+        function initFirebase() {
+            if (firebaseConfig.apiKey && firebaseConfig.apiKey !== "AIzaSyCHsvdhqucG9byQxZE47AxRb8v4bezVJU0") {
+                try {
+                    firebase.initializeApp(firebaseConfig);
+                    dbRef = firebase.database().ref("nurse_bookings");
                     
-                    const block = document.createElement('div');
-                    block.className = `p-1 rounded font-medium flex flex-col gap-0.5 border-l-2 text-left badge-${s === 'เช้า' ? 'morning' : s === 'บ่าย' ? 'afternoon' : s === 'ดึก' ? 'night' : 'off'}`;
+                    // ดึงข้อมูลและสร้าง Listener รับการอัปเดตแบบ Realtime ทันที
+                    dbRef.on("value", (snapshot) => {
+                        const data = snapshot.val();
+                        bookings = data || {};
+                        updateCalendar();
+                        if (!document.getElementById('booking-modal').classList.contains('hidden')) {
+                            renderModalBookings();
+                        }
+                    });
                     
-                    const titleNode = document.createElement('div');
-                    titleNode.className = "font-bold opacity-80 flex justify-between";
-                    titleNode.innerHTML = `<span>${s === 'เช้า' ? '☀️' : s === 'บ่าย' ? '⛅' : s === 'ดึก' ? '🌙' : '🏖️'} ${s}</span> <span class="text-[9px] font-normal">(${shiftList.length}/4)</span>`;
-                    block.appendChild(titleNode);
+                    // สังเกตสถานะการตั้งค่าเปิดปิดระบบจาก Firebase
+                    firebase.database().ref("system_config").on("value", (snapshot) => {
+                        const config = snapshot.val();
+                        if (config) {
+                            systemConfig = config;
+                            applySystemStatusUI();
+                        }
+                    });
 
-                    if (shiftList.length > 0) {
-                        const nameWrap = document.createElement('div');
-                        nameWrap.className = "flex flex-wrap gap-0.5 mt-0.5";
-                        shiftList.forEach(([id, b]) => {
-                            const btn = document.createElement('button');
-                            btn.className = "bg-white/80 hover:bg-white text-slate-700 px-1 py-0.5 rounded border border-slate-200 text-[9px] truncate max-w-[65px] transition cursor-pointer active:scale-95";
-                            btn.innerText = b.name;
-                            btn.onclick = (e) => { e.stopPropagation(); showBookingDetail(id); };
-                            nameWrap.appendChild(btn);
-                        });
-                        block.appendChild(nameWrap);
-                    }
-                    overviewContainer.appendChild(block);
-                });
-
-                dayBox.appendChild(overviewContainer);
-                grid.appendChild(dayBox);
+                    isFirebaseConnected = true;
+                    console.log("Firebase Realtime Database Connected successfully.");
+                } catch (error) {
+                    console.error("Firebase connection failed, falling back to LocalStorage:", error);
+                    setupLocalStorageFallback();
+                }
+            } else {
+                console.log("Firebase key is empty. Operating in LocalStorage Fallback mode.");
+                setupLocalStorageFallback();
             }
         }
 
-        document.getElementById('shiftDate').value = new Date().toISOString().split('T');
-        renderCalendar();
+        function setupLocalStorageFallback() {
+            bookings = JSON.parse(localStorage.getItem('nurse_bookings')) || {};
+            systemConfig = JSON.parse(localStorage.getItem('system_config')) || { isRegistrationOpen: true };
+            updateCalendar();
+            applySystemStatusUI();
+        }
+
+        window.onload = function() {
+            initSelectOptions();
+            initFirebase();
+        };
+
+        function initSelectOptions() {
+            const mSelect = document.getElementById('select-month');
+            thaiMonths.forEach((m, idx) => {
+                let opt = document.createElement('option');
+                opt.value = idx;
+                opt.textContent = m;
+                mSelect.appendChild(opt);
+            });
+            syncSelectValues();
+        }
+
+        function syncSelectValues() {
+            document.getElementById('select-month').value = currentMonth;
+            document.getElementById('input-year').value = currentYear + 543; // แปลง ค.ศ. เป็น พ.ศ. โชว์บนหน้าจอ
+        }
+
+        function changeCalendarDate() {
+            currentMonth = parseInt(document.getElementById('select-month').value);
+            const inputYearValue = parseInt(document.getElementById('input-year').value);
+            if (!isNaN(inputYearValue)) {
+                currentYear = inputYearValue - 543; // แปลงกลับเป็น ค.ศ. เพื่อคำนวณวัน
+            }
+            updateCalendar();
+        }
+
+        function navigateMonth(step) {
+            currentMonth += step;
+            if (currentMonth < 0) { currentMonth = 11; currentYear--; }
+            else if (currentMonth > 11) { currentMonth = 0; currentYear++; }
+            syncSelectValues();
+            updateCalendar();
+        }
+
+        function setToday() {
+            currentYear = new Date().getFullYear();
+            currentMonth = new Date().getMonth();
+            syncSelectValues();
+            updateCalendar();
+        }
+
+        // 📅 ฟังก์ชันวาดปฏิทินแบบจัดกลุ่มและแสดงชื่อผู้จองเวรให้เห็นเด่นชัด
+        function updateCalendar() {
+            const daysContainer = document.getElementById('calendar-days');
+            daysContainer.innerHTML = '';
+
+            const firstDayIndex = new Date(currentYear, currentMonth, 1).getDay();
+            const totalDays = new Date(currentYear, currentMonth + 1, 0).getDate();
+
+            // กล่องเปล่าของวันก่อนหน้าต้นเดือน
+            for(let i = 0; i < firstDayIndex; i++) {
+                let emptyCell = document.createElement('div');
+                emptyCell.className = "bg-slate-100/30 min-h-[140px] border-slate-200 border-r border-b";
+                daysContainer.appendChild(emptyCell);
+            }
+
+            // สล๊อตวันตามจริงภายในเดือน
+            for(let day = 1; day <= totalDays; day++) {
+                const dateKey = `${currentYear}-${String(currentMonth+1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                const dayBookings = bookings[dateKey] || [];
+
+                let cell = document.createElement('div');
+                cell.className = "bg-white p-2 min-h-[150px] transition hover:bg-slate-50 border-slate-200 border-r border-b flex flex-col justify-between cursor-pointer overflow-hidden";
+                cell.onclick = () => openBookingModal(dateKey, day);
+
+                // แยกจัดกลุ่มผู้จองเวรแต่ละประเภท
+                let shiftsGroup = { 'เช้า': [], 'บ่าย': [], 'ดึก': [], 'off': [] };
+                dayBookings.forEach(b => {
+                    if(shiftsGroup[b.shift]) shiftsGroup[b.shift].push(b.name);
+                });
+
+                // ส่วนหัวแสดงเลขวันที่
+                let isToday = new Date().toDateString() === new Date(currentYear, currentMonth, day).toDateString();
+                let dayNumberHTML = `<span class="inline-flex w-6 h-6 items-center justify-center font-bold text-xs rounded-full ${isToday ? 'bg-blue-600 text-white' : 'text-slate-700'}">${day}</span>`;
+
+                // ส่วนแสดงผลข้อมูลผู้จองแบบจัดกลุ่มแยกกล่องชัดเจน
+                let groupsHTML = '<div class="space-y-1 mt-1 text-[11px] overflow-y-auto max-h-[110px] pr-0.5">';
+                
+                const shiftConfigs = [
+                    { key: 'เช้า', label: 'M', bg: 'bg-amber-500 text-white', listBg: 'bg-amber-50 border-amber-200 text-amber-900' },
+                    { key: 'บ่าย', label: 'A', bg: 'bg-orange-500 text-white', listBg: 'bg-orange-50 border-orange-200 text-orange-900' },
+                    { key: 'ดึก', label: 'N', bg: 'bg-indigo-600 text-white', listBg: 'bg-indigo-50 border-indigo-200 text-indigo-900' },
+                    { key: 'off', label: 'OFF', bg: 'bg-emerald-500 text-white', listBg: 'bg-emerald-50 border-emerald-200 text-emerald-900' }
+                ];
+
+                shiftConfigs.forEach(sc => {
+                    const list = shiftsGroup[sc.key];
+                    if(list.length > 0) {
+                        groupsHTML += `
+                            <div class="flex items-start gap-1 p-1 rounded-sm border ${sc.listBg}">
+                                <span class="px-1 text-[9px] font-bold rounded-xs ${sc.bg} inline-block scale-90 origin-left">${sc.label}</span>
+                                <div class="font-medium truncate flex-1 leading-tight text-[10px]">
+                                    ${list.join(', ')}
+                                </div>
+                                <span class="text-[9px] font-bold text-slate-500">${list.length}/4</span>
+                            </div>
+                        `;
+                    }
+                });
+                groupsHTML += '</div>';
+
+                // รายละเอียดสรุปรวมท้ายการ์ดวัน
+                let footerSummary = `<div class="text-[9px] font-medium text-slate-400 border-t border-slate-100 pt-1 text-right mt-1">จองแล้วทั้งหมด ${dayBookings.length} คน</div>`;
+
+                cell.innerHTML = `<div><div class="flex justify-between items-center">${dayNumberHTML}</div>${groupsHTML}</div>${footerSummary}`;
+                daysContainer.appendChild(cell);
+            }
+        }
+
+        // จัดการเปิด Popup รายวัน
+        function openBookingModal(dateKey, dayDisplay) {
+            selectedDateStr = dateKey;
+            document.getElementById('modal-date-title').innerText = `📅 จัดการเวรวันที่ ${dayDisplay} ${thaiMonths[currentMonth]} พ.ศ. ${currentYear+543}`;
+            
+            const formSection = document.getElementById('registration-form-section');
+            if(!systemConfig.isRegistrationOpen) {
+                formSection.innerHTML = `<p class="text-center text-rose-500 font-medium text-sm py-2"><i class="fa-solid fa-circle-exclamation"></i> ขณะนี้ผู้ดูแลระบบได้ ปิด การลงทะเบียนจองเวรชั่วคราว</p>`;
+            } else {
+                formSection.innerHTML = `
+                    <h4 class="font-semibold text-sm text-slate-700 mb-3"><i class="fa-solid fa-user-plus text-blue-500"></i> ลงทะเบียนจองเวรใหม่</h4>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+                        <div>
+                            <label class="block text-xs font-medium text-slate-600 mb-1">ชื่อผู้จอง</label>
+                            <input type="text" id="nurse-name" placeholder="ระบุชื่อ-นามสกุล" class="w-full text-sm border border-slate-300 rounded-lg px-3 py-2 bg-white">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-600 mb-1">เลือกกะ/เวร</label>
+                            <select id="shift-type" class="w-full text-sm border border-slate-300 rounded-lg px-3 py-2 bg-white">
+                                <option value="เช้า">☀️ เวรเช้า (M)</option>
+                                <option value="บ่าย">⛅ เวรบ่าย (A)</option>
+                                <option value="ดึก">🌙 เวรดึก (N)</option>
+                                <option value="off">🏖️ วันหยุด (OFF)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button onclick="addBooking()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm py-2 rounded-lg transition">ยืนยันการจองเวร</button>
+                `;
+            }
+
+            renderModalBookings();
+            document.getElementById('booking-modal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('booking-modal').classList.add('hidden');
+        }
+
+        // แสดงรายชื่อบน Modal แบบแบ่งกลุ่มสัดส่วนชัดเจน
+        function renderModalBookings() {
+            const listContainer = document.getElementById('modal-bookings-list');
+            listContainer.innerHTML = '';
+            
+            const dayBookings = bookings[selectedDateStr] || [];
+
+            if(dayBookings.length === 0) {
+                listContainer.innerHTML = `<p class="text-center text-slate-400 text-xs py-6 bg-slate-50 rounded-xl border border-dashed border-slate-300">ยังไม่มีการลงทะเบียนเวรในวันนี้</p>`;
+                return;
+            }
+
+            // แบ่งออกเป็น 4 อาร์เรย์ตามประเภทเวร
+            let categories = { 'เช้า': [], 'บ่าย': [], 'ดึก': [], 'off': [] };
+            dayBookings.forEach((b, originalIndex) => {
+                categories[b.shift].push({ ...b, originalIndex });
+            });
+
+            const renderGroupBlock = (title, list, badgeColor, blockBg, borderCol) => {
+                if (list.length === 0) return '';
+                let blockHTML = `
+                    <div class="${blockBg} border ${borderCol} rounded-xl p-3">
+                        <div class="flex justify-between items-center mb-2 pb-1 border-b ${borderCol}">
+                            <span class="font-bold text-xs flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full ${badgeColor}"></span> กลุ่มเวร${title}</span>
+                            <span class="text-xs font-bold text-slate-500">${list.length} / 4 คน</span>
+                        </div>
+                        <div class="space-y-1.5">
+                `;
+                
+                list.forEach(item => {
+                    blockHTML += `
+                        <div class="flex justify-between items-center bg-white/70 px-2 py-1 rounded border border-slate-200 text-xs">
+                            <span class="font-medium text-slate-800">👤 ${item.name}</span>
+                            <button onclick="removeBookingWithAuth(${item.originalIndex})" class="text-slate-400 hover:text-rose-500 transition px-1" title="ลบรายชื่อนี้"><i class="fa-solid fa-trash-can scale-90"></i></button>
+                        </div>
+                    `;
+                });
+
+                blockHTML += `</div></div>`;
+                return blockHTML;
+            };
+
+            let finalHTML = '';
+            finalHTML += renderGroupBlock('เช้า (M)', categories['เช้า'], 'bg-amber-500', 'bg-amber-50/50', 'border-amber-200');
+            finalHTML += renderGroupBlock('บ่าย (A)', categories['บ่าย'], 'bg-orange-500', 'bg-orange-50/50', 'border-orange-200');
+            finalHTML += renderGroupBlock('ดึก (N)', categories['ดึก'], 'bg-indigo-600', 'bg-indigo-50/50', 'border-indigo-200');
+            finalHTML += renderGroupBlock('วันหยุด (OFF)', categories['off'], 'bg-emerald-500', 'bg-emerald-50/50', 'border-emerald-200');
+
+            listContainer.innerHTML = finalHTML;
+        }
+
+        // ทำการจองเวร
+        function addBooking() {
+            if(!systemConfig.isRegistrationOpen) return alert('ขออภัย ระบบจองปิดลงทะเบียนอยู่ในขณะนี้');
+            
+            const nameInput = document.getElementById('nurse-name');
+            const shiftSelect = document.getElementById('shift-type');
+            
+            if(!nameInput.value.trim()) return alert('กรุณากรอกระบุชื่อ-นามสกุลผู้จอง');
+
+            const name = nameInput.value.trim();
+            const shift = shiftSelect.value;
+
+            if(!bookings[selectedDateStr]) bookings[selectedDateStr] = [];
+
+            // เช็คโค้วต้าไม่เกิน 4 คนต่อกลุ่มเวรวันนั้นๆ
+            const currentShiftCount = bookings[selectedDateStr].filter(b => b.shift === shift).length;
+            if(currentShiftCount >= 4) {
+                alert(`กลุ่มเวร${shift} ในวันนี้มีผู้จองเต็มจำนวนแล้ว (จำกัดสูงสุดกลุ่มละ 4 คนเท่านั้น)`);
+                return;
+            }
+
+            bookings[selectedDateStr].push({ name, shift, timestamp: new Date().getTime() });
+            
+            saveData();
+            nameInput.value = '';
+            renderModalBookings();
+            updateCalendar();
+        }
+
+        // ยกเลิกข้อมูลเฉพาะรายคน (ต้องใส่รหัส)
+        function removeBookingWithAuth(index) {
+            const password = prompt("ระบบความปลอดภัย: กรุณากรอกรหัสผ่านผู้ดูแลเพื่อยืนยันการลบรายชื่อจองเวรนี้:");
+            if (password === null) return; 
+            if (password === ADMIN_PIN) {
+                bookings[selectedDateStr].splice(index, 1);
+                if(bookings[selectedDateStr].length === 0) delete bookings[selectedDateStr];
+                saveData();
+                renderModalBookings();
+                updateCalendar();
+            } else {
+                alert("รหัสผ่านไม่ถูกต้อง! ปฏิเสธการเข้าถึงข้อมูล");
+            }
+        }
+
+        // สลับสถานะเปิด/ปิดจอง
+        function toggleSystemRegistration() {
+            const password = prompt("กรุณากรอกรหัสผ่านเพื่อสลับสถานะเปิด/ปิดรับลงทะเบียนตารางเวร:");
+            if (password === null) return;
+            if (password === ADMIN_PIN) {
+                systemConfig.isRegistrationOpen = !systemConfig.isRegistrationOpen;
+                saveSystemConfig();
+                applySystemStatusUI();
+                alert(`ปรับปรุงสถานะระบบเรียบร้อยแล้ว`);
+                if(!document.getElementById('booking-modal').classList.contains('hidden')) {
+                    openBookingModal(selectedDateStr, new Date(selectedDateStr).getDate());
+                }
+            } else {
+                alert("รหัสผ่านไม่ถูกต้อง!");
+            }
+        }
+
+        function applySystemStatusUI() {
+            const statusBadge = document.getElementById('system-status-badge');
+            const regText = document.getElementById('reg-toggle-text');
+            const regIcon = document.getElementById('reg-toggle-icon');
+
+            if(systemConfig.isRegistrationOpen) {
+                statusBadge.innerHTML = `<span class="w-3 h-3 rounded-full bg-green-400 animate-pulse"></span> ระบบเปิดลงทะเบียน`;
+                statusBadge.className = "bg-white/20 px-4 py-2 rounded-full text-sm font-medium backdrop-blur-xs flex items-center gap-2";
+                regText.innerText = "ปิดระบบจอง";
+                regIcon.className = "fa-solid fa-toggle-on";
+            } else {
+                statusBadge.innerHTML = `<span class="w-3 h-3 rounded-full bg-rose-400"></span> ปิดระบบลงทะเบียนแล้ว`;
+                statusBadge.className = "bg-rose-600/30 px-4 py-2 rounded-full text-sm font-medium backdrop-blur-xs flex items-center gap-2 text-rose-100";
+                regText.innerText = "เปิดระบบจอง";
+                regIcon.className = "fa-solid fa-toggle-off";
+            }
+        }
+
+        // ล้างฐานข้อมูลทั้งหมด
+        function clearAllDataWithAuth() {
+            const password = prompt("⚠️ 🚨 แจ้งเตือนขั้นเด็ดขาด: ตารางเวรและผู้จองทั้งหมดบนคลาวด์จะถูกลบถาวร ยืนยันรหัสผ่านแอดมินเพื่อดำเนินการ:");
+            if (password === ADMIN_PIN) {
+                if(confirm("คุณแน่ใจอย่างยิ่งใช่ไหมว่าจะล้างประวัติข้อมูลทั้งหมดในระบบ?")) {
+                    bookings = {};
+                    saveData();
+                    updateCalendar();
+                    alert("ล้างระบบข้อมูลสำเร็จเสร็จสิ้น");
+                }
+            } else if(password !== null) {
+                alert("รหัสผ่านไม่ถูกต้อง!");
+            }
+        }
+
+        // ฟังก์ชันสั่งเขียนอัปเดตข้อมูลขึ้น Firebase หรือ LocalStorage
+        function saveData() {
+            if (isFirebaseConnected && dbRef) {
+                dbRef.set(bookings);
+            } else {
+                localStorage.setItem('nurse_bookings', JSON.stringify(bookings));
+            }
+        }
+
+        function saveSystemConfig() {
+            if (isFirebaseConnected) {
+                firebase.database().ref("system_config").set(systemConfig);
+            } else {
+                localStorage.setItem('system_config', JSON.stringify(systemConfig));
+            }
+        }
     </script>
 </body>
 </html>
