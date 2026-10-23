@@ -3,58 +3,58 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ระบบจองเวรพยาบาลออนไลน์</title>
-    <!-- Tailwind CSS & Flowbite / FontAwesome -->
+    <title>ระบบจองเวรพยาบาลออนไลน์ - ภาพรวม</title>
+    <!-- Tailwind CSS & FontAwesome -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        .shift-morning { background-color: #fef3c7; color: #92400e; }
-        .shift-afternoon { background-color: #e0f2fe; color: #075985; }
-        .shift-night { background-color: #f3e8ff; color: #6b21a8; }
-        .shift-off { background-color: #f3f4f6; color: #374151; }
+        .badge-morning { background-color: #fffbeb; color: #b45309; border-left: 3px solid #f59e0b; }
+        .badge-afternoon { background-color: #f0fdf4; color: #166534; border-left: 3px solid #22c55e; }
+        .badge-night { background-color: #f5f3ff; color: #5b21b6; border-left: 3px solid #8b5cf6; }
+        .badge-off { background-color: #f8fafc; color: #475569; border-left: 3px solid #94a3b8; }
     </style>
 </head>
-<body class="bg-slate-50 text-slate-800 min-h-screen">
+<body class="bg-slate-100 text-slate-800 min-h-screen">
 
     <div class="max-w-7xl mx-auto p-4">
         <!-- Header -->
-        <header class="bg-blue-600 text-white p-6 rounded-2xl shadow-lg mb-6 flex flex-col md:flex-row justify-between items-center gap-4">
+        <header class="bg-indigo-600 text-white p-6 rounded-2xl shadow-lg mb-6 flex flex-col md:flex-row justify-between items-center gap-4">
             <div>
-                <h1 class="text-2xl font-bold flex items-center gap-2"><i class="fa-solid fa-user-nurse"></i> ระบบจองเวรพยาบาลออนไลน์</h1>
-                <p class="text-blue-100 text-sm mt-1">แสดงผลเรียลไทม์ จำกัดเวรละ 4 คน</p>
+                <h1 class="text-2xl font-bold flex items-center gap-2"><i class="fa-solid fa-table-list"></i> ระบบจองเวรพยาบาลออนไลน์ (ระบบภาพรวม)</h1>
+                <p class="text-indigo-100 text-sm mt-1">แสดงผลแบ่งกลุ่มเวรเรียลไทม์ จำกัดเวรละ 4 คน</p>
             </div>
             <div class="flex items-center gap-2">
                 <span id="regStatusBadge" class="px-3 py-1 text-xs font-bold rounded-full bg-green-100 text-green-800">กำลังเปิดลงทะเบียน</span>
-                <button onclick="toggleAdminModal(true)" class="bg-blue-800 hover:bg-blue-900 px-4 py-2 rounded-lg text-sm transition font-medium">
+                <button onclick="toggleAdminModal(true)" class="bg-indigo-800 hover:bg-indigo-900 px-4 py-2 rounded-lg text-sm transition font-medium">
                     <i class="fa-solid fa-gear"></i> ผู้ดูแลระบบ
                 </button>
             </div>
         </header>
 
-        <!-- Booking Form & Info Section -->
+        <!-- Main Content -->
         <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-6">
-            <!-- Form -->
-            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 lg:col-span-1">
+            <!-- Form Card -->
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 lg:col-span-1 h-fit">
                 <h2 class="text-lg font-bold mb-4 flex items-center gap-2 text-slate-700"><i class="fa-solid fa-pen-to-square"></i> ลงทะเบียนจองเวร</h2>
                 <div id="bookingForm" class="space-y-4">
                     <div>
                         <label class="block text-sm font-medium text-slate-600 mb-1">ชื่อ-นามสกุล / ชื่อเล่น</label>
-                        <input type="text" id="nurseName" placeholder="ระบุชื่อของคุณ" class="w-full border rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <input type="text" id="nurseName" placeholder="ระบุชื่อของคุณ" class="w-full border border-slate-300 rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-slate-600 mb-1">เลือกวันที่</label>
-                        <input type="date" id="shiftDate" class="w-full border rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <input type="date" id="shiftDate" class="w-full border border-slate-300 rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-slate-600 mb-1">เลือกเวร (จำกัด 4 คน/เวร)</label>
-                        <select id="shiftType" class="w-full border rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <select id="shiftType" class="w-full border border-slate-300 rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
                             <option value="เช้า">☀️ เวรเช้า (08:00 - 16:00)</option>
                             <option value="บ่าย">⛅ เวรบ่าย (16:00 - 24:00)</option>
                             <option value="ดึก">🌙 เวรดึก (00:00 - 08:00)</option>
                             <option value="OFF">🏖️ OFF (วันหยุด)</option>
                         </select>
                     </div>
-                    <button onclick="submitBooking()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-xl transition flex justify-center items-center gap-2 shadow-md shadow-blue-200">
+                    <button onclick="submitBooking()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-xl transition flex justify-center items-center gap-2 shadow-md shadow-indigo-200">
                         <i class="fa-solid fa-check"></i> บันทึกการจองเวร
                     </button>
                 </div>
@@ -63,29 +63,65 @@
                 </div>
             </div>
 
-            <!-- Calendar Display -->
-            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 lg:col-span-3">
-                <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-lg font-bold flex items-center gap-2 text-slate-700"><i class="fa-solid fa-calendar-days"></i> ปฏิทินตารางเวรประจำเดือน</h2>
+            <!-- Dashboard Calendar Card -->
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 lg:col-span-3">
+                <div class="flex flex-col sm:flex-row justify-between items-center mb-6 gap-2">
+                    <h2 class="text-lg font-bold flex items-center gap-2 text-slate-700"><i class="fa-solid fa-calendar-days"></i> ตารางภาพรวมเวรประจำเดือน</h2>
                     <div class="flex gap-2">
                         <button onclick="changeMonth(-1)" class="p-2 hover:bg-slate-100 rounded-lg text-slate-600"><i class="fa-solid fa-chevron-left"></i></button>
-                        <span id="currentMonthYear" class="font-bold text-slate-700 min-w-[120px] text-center pt-1"></span>
+                        <span id="currentMonthYear" class="font-bold text-slate-700 min-w-[140px] text-center pt-1 text-base"></span>
                         <button onclick="changeMonth(1)" class="p-2 hover:bg-slate-100 rounded-lg text-slate-600"><i class="fa-solid fa-chevron-right"></i></button>
                     </div>
                 </div>
 
-                <!-- Calendar Grid -->
-                <div class="grid grid-cols-7 gap-2 text-center font-semibold text-sm text-slate-500 mb-2">
-                    <div>อา.</div><div>จ.</div><div>อ.</div><div>พ.</div><div>พฤ.</div><div>ศ.</div><div>ส.</div>
+                <!-- Calendar Grid Header -->
+                <div class="grid grid-cols-7 gap-2 text-center font-bold text-sm text-slate-500 mb-2 border-b pb-2">
+                    <div class="text-rose-500">อา.</div><div>จ.</div><div>อ.</div><div>พ.</div><div>พฤ.</div><div>ศ.</div><div class="text-sky-600">ส.</div>
                 </div>
                 <div id="calendarGrid" class="grid grid-cols-7 gap-2">
-                    <!-- Days injected by JS -->
+                    <!-- Days dynamically injected here -->
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Admin Configuration Modal -->
+    <!-- Info Detail Modal -->
+    <div id="detailModal" class="fixed inset-0 bg-black/50 hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-xl space-y-4">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h3 class="text-lg font-bold text-slate-800"><i class="fa-solid fa-circle-info text-indigo-500"></i> รายละเอียดผู้ลงเวร</h3>
+                <button onclick="toggleDetailModal(false)" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <div class="space-y-3 py-2">
+                <div class="flex justify-between items-center bg-slate-50 p-3 rounded-xl">
+                    <span class="text-sm text-slate-500 font-medium">ชื่อผู้ลงเวร:</span>
+                    <span id="modalNurseName" class="text-base font-bold text-slate-800"></span>
+                </div>
+                <div class="flex justify-between items-center bg-slate-50 p-3 rounded-xl">
+                    <span class="text-sm text-slate-500 font-medium">วันที่:</span>
+                    <span id="modalShiftDate" class="text-sm font-semibold text-slate-700"></span>
+                </div>
+                <div class="flex justify-between items-center bg-slate-50 p-3 rounded-xl">
+                    <span class="text-sm text-slate-500 font-medium">ช่วงเวลาเวร:</span>
+                    <span id="modalShiftType" class="px-3 py-1 text-xs font-bold rounded-full"></span>
+                </div>
+                <div class="pt-2 border-t">
+                    <label class="block text-xs font-medium text-slate-500 mb-1">กรอกรหัสผ่านเพื่อยกเลิกเวรนี้</label>
+                    <input type="password" id="cancelPassInput" placeholder="รหัสผ่านยกเลิกเวร" class="w-full border border-slate-300 rounded-xl p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-rose-500">
+                </div>
+            </div>
+            <div class="flex gap-2 pt-2">
+                <button onclick="deleteCurrentBooking()" class="flex-1 bg-rose-50 hover:bg-rose-100 text-rose-600 font-semibold py-2.5 rounded-xl text-sm transition flex justify-center items-center gap-2 border border-rose-200">
+                    <i class="fa-solid fa-trash-can"></i> ยืนยันยกเลิกเวร
+                </button>
+                <button onclick="toggleDetailModal(false)" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold py-2.5 rounded-xl text-sm transition">
+                    ปิด
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Panel Modal -->
     <div id="adminModal" class="fixed inset-0 bg-black/50 hidden z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl space-y-4">
             <div class="flex justify-between items-center border-b pb-3">
@@ -95,7 +131,7 @@
             <div class="space-y-3">
                 <div>
                     <label class="block text-sm font-medium text-slate-600 mb-1">รหัสผ่านผู้ดูแลระบบ</label>
-                    <input type="password" id="adminPass" placeholder="กรอกรหัสผ่านเพื่อสั่งการ" class="w-full border rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <input type="password" id="adminPass" placeholder="กรอกรหัสผ่านเพื่อสั่งการ" class="w-full border border-slate-300 rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
                 </div>
                 <div class="pt-2 border-t space-y-2">
                     <label class="block text-sm font-medium text-slate-600">จัดการระบบลงทะเบียน</label>
@@ -113,12 +149,11 @@
         </div>
     </div>
 
-    <!-- Firebase SDK Step -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getDatabase, ref, set, push, onValue, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-        // CONFIG: ตั้งค่า Firebase ของคุณที่นี่
+        // CONFIG: เปลี่ยนเป็นข้อมูลฐานข้อมูล Firebase ของคุณ
         const firebaseConfig = {
           apiKey: "AIzaSyCHsvdhqucG9byQxZE47AxRb8v4bezVJU0",
           authDomain: "nurse-db-cbc9c.firebaseapp.com",
@@ -133,20 +168,24 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        // State & Constants
-        const ADMIN_PASSWORD = "NURSE1234_PASSWORD"; // ตั้งรหัสผ่านจัดการตรงนี้
+        // Security Configurations
+        const ADMIN_PASSWORD = "NURSE1234"; 
+        const CANCEL_PASSWORD = "CANCEL1234";  
+        
         let currentUrlDate = new Date();
         let currentMonth = currentUrlDate.getMonth();
         let currentYear = currentUrlDate.getFullYear();
         let allBookings = {};
         let configSystem = { open: true };
+        let selectedBookingId = null;
 
-        // DOM Elements
-        window.toggleAdminModal = (show) => {
-            document.getElementById('adminModal').classList.toggle('hidden', !show);
+        window.toggleAdminModal = (show) => document.getElementById('adminModal').classList.toggle('hidden', !show);
+        window.toggleDetailModal = (show) => {
+            document.getElementById('detailModal').classList.toggle('hidden', !show);
+            if(!show) document.getElementById('cancelPassInput').value = '';
         };
 
-        // Realtime Sync
+        // Sync System Status
         onValue(ref(db, 'system_config'), (snapshot) => {
             const val = snapshot.val();
             if (val) {
@@ -159,37 +198,50 @@
             }
         });
 
+        // Sync Data
         onValue(ref(db, 'bookings'), (snapshot) => {
             allBookings = snapshot.val() || {};
             renderCalendar();
         });
 
-        // Booking Function
+        window.showBookingDetail = (id) => {
+            const booking = allBookings[id];
+            if (!booking) return;
+            selectedBookingId = id;
+            document.getElementById('modalNurseName').innerText = booking.name;
+            document.getElementById('modalShiftDate').innerText = new Date(booking.date).toLocaleDateString('th-TH', { day: 'numeric', month: 'long', year: 'numeric' });
+            
+            const badge = document.getElementById('modalShiftType');
+            badge.innerText = `เวร${booking.shift}`;
+            badge.className = `px-3 py-1 text-xs font-bold rounded-full badge-${booking.shift === 'เช้า' ? 'morning' : booking.shift === 'บ่าย' ? 'afternoon' : booking.shift === 'ดึก' ? 'night' : 'off'}`;
+            toggleDetailModal(true);
+        };
+
+        window.deleteCurrentBooking = () => {
+            if (!selectedBookingId) return;
+            const inputPass = document.getElementById('cancelPassInput').value.trim();
+            if (!inputPass) return alert('กรุณากรอกรหัสผ่านเพื่อยกเลิกเวรด้วยครับ');
+            if (inputPass !== CANCEL_PASSWORD && inputPass !== ADMIN_PASSWORD) return alert('รหัสผ่านไม่ถูกต้อง');
+
+            if (confirm('คุณต้องการยกเลิกตารางเวรนี้ใช่หรือไม่?')) {
+                remove(ref(db, `bookings/${selectedBookingId}`)).then(() => {
+                    alert('ยกเลิกการจองเวรสำเร็จแล้วครับ');
+                    toggleDetailModal(false);
+                    selectedBookingId = null;
+                });
+            }
+        };
+
         window.submitBooking = () => {
             const name = document.getElementById('nurseName').value.trim();
             const dateStr = document.getElementById('shiftDate').value;
             const shift = document.getElementById('shiftType').value;
 
-            if (!name || !dateStr) {
-                alert('กรุณากรอกชื่อและเลือกวันที่ต้องการลงเวรครับ');
-                return;
-            }
+            if (!name || !dateStr) return alert('กรุณากรอกชื่อและเลือกวันที่ต้องการลงเวรครับ');
+            if (!configSystem.open) return alert('ขออภัย ระบบปิดรับการลงทะเบียนในขณะนี้');
 
-            if (!configSystem.open) {
-                alert('ขออภัย ขณะนี้ระบบปิดการลงทะเบียนจองเวรครับ');
-                return;
-            }
-
-            // นับจำนวนคนที่จองเวรนั้นในวันนั้น
-            let count = 0;
-            Object.values(allBookings).forEach(b => {
-                if (b.date === dateStr && b.shift === shift) count++;
-            });
-
-            if (count >= 4) {
-                alert(`ขออภัยครับ เวร${shift} ของวันที่ ${dateStr} เต็ม 4 คนแล้วครับ!`);
-                return;
-            }
+            let count = Object.values(allBookings).filter(b => b.date === dateStr && b.shift === shift).length;
+            if (count >= 4) return alert(`ขออภัยครับ เวร${shift} ของวันที่ ${dateStr} เต็มโควตา 4 คนแล้วครับ!`);
 
             const newBookingRef = push(ref(db, 'bookings'));
             set(newBookingRef, { name, date: dateStr, shift }).then(() => {
@@ -198,26 +250,26 @@
             });
         };
 
-        // Admin Controls
         window.setRegistrationStatus = (isOpen) => {
             if (document.getElementById('adminPass').value !== ADMIN_PASSWORD) return alert('รหัสผ่านไม่ถูกต้อง');
             set(ref(db, 'system_config'), { open: isOpen }).then(() => {
-                alert(`เปลี่ยนสถานะระบบเป็น: ${isOpen ? 'เปิด' : 'ปิด'} เรียบร้อย`);
+                alert(`เปลี่ยนสถานะระบบสำเร็จ`);
                 toggleAdminModal(false);
+                document.getElementById('adminPass').value = '';
             });
         };
 
         window.clearAllData = () => {
             if (document.getElementById('adminPass').value !== ADMIN_PASSWORD) return alert('รหัสผ่านไม่ถูกต้อง');
-            if (confirm('คุณต้องการล้างตารางเวรทั้งหมดใช่หรือไม่? ข้อมูลจะหายถาวร!')) {
+            if (confirm('คุณต้องการล้างตารางเวรทั้งหมดใช่หรือไม่?')) {
                 remove(ref(db, 'bookings')).then(() => {
-                    alert('ล้างข้อมูลตารางเวรทั้งหมดเรียบร้อยแล้วครับ');
+                    alert('ล้างข้อมูลเรียบร้อย');
                     toggleAdminModal(false);
+                    document.getElementById('adminPass').value = '';
                 });
             }
         };
 
-        // Calendar Render Engine
         window.changeMonth = (dir) => {
             currentMonth += dir;
             if (currentMonth < 0) { currentMonth = 11; currentYear--; }
@@ -228,56 +280,61 @@
         function renderCalendar() {
             const grid = document.getElementById('calendarGrid');
             grid.innerHTML = '';
-            
             const monthNames = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
             document.getElementById('currentMonthYear').innerText = `${monthNames[currentMonth]} ${currentYear + 543}`;
 
             const firstDay = new Date(currentYear, currentMonth, 1).getDay();
             const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
 
-            // เติมช่องว่างวันก่อนหน้า
-            for (let i = 0; i < firstDay; i++) {
-                grid.appendChild(document.createElement('div'));
-            }
+            for (let i = 0; i < firstDay; i++) grid.appendChild(document.createElement('div'));
 
-            // สร้างวันในเดือน
             for (let day = 1; day <= daysInMonth; day++) {
+                const currentFormatDate = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                
                 const dayBox = document.createElement('div');
-                dayBox.className = "bg-slate-50 border border-slate-100 rounded-xl p-2 min-h-[110px] text-left flex flex-col justify-between";
+                dayBox.className = "bg-white border border-slate-200 rounded-xl p-2 min-h-[160px] flex flex-col justify-between shadow-xs";
                 
                 const dayNum = document.createElement('span');
-                dayNum.className = "font-bold text-xs text-slate-400 block mb-1";
+                dayNum.className = "font-bold text-xs text-slate-400 block mb-2";
                 dayNum.innerText = day;
                 dayBox.appendChild(dayNum);
 
-                const listContainer = document.createElement('div');
-                listContainer.className = "space-y-1 overflow-y-auto max-h-[85px] text-[10px]";
+                const overviewContainer = document.createElement('div');
+                overviewContainer.className = "space-y-1.5 flex-1 flex flex-col justify-start text-[10px]";
 
-                // Format วันเป็น YYYY-MM-DD
-                const currentFormatDate = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                const shifts = ['เช้า', 'บ่าย', 'ดึก', 'OFF'];
+                shifts.forEach(s => {
+                    const shiftList = Object.entries(allBookings).filter(([id, b]) => b.date === currentFormatDate && b.shift === s);
+                    
+                    const block = document.createElement('div');
+                    block.className = `p-1 rounded font-medium flex flex-col gap-0.5 border-l-2 text-left badge-${s === 'เช้า' ? 'morning' : s === 'บ่าย' ? 'afternoon' : s === 'ดึก' ? 'night' : 'off'}`;
+                    
+                    const titleNode = document.createElement('div');
+                    titleNode.className = "font-bold opacity-80 flex justify-between";
+                    titleNode.innerHTML = `<span>${s === 'เช้า' ? '☀️' : s === 'บ่าย' ? '⛅' : s === 'ดึก' ? '🌙' : '🏖️'} ${s}</span> <span class="text-[9px] font-normal">(${shiftList.length}/4)</span>`;
+                    block.appendChild(titleNode);
 
-                // ดึงรายชื่อมาพ่นลงกล่องวัน
-                Object.values(allBookings).forEach(b => {
-                    if (b.date === currentFormatDate) {
-                        const row = document.createElement('div');
-                        let shiftClass = 'shift-morning';
-                        if(b.shift === 'บ่าย') shiftClass = 'shift-afternoon';
-                        if(b.shift === 'ดึก') shiftClass = 'shift-night';
-                        if(b.shift === 'OFF') shiftClass = 'shift-off';
-
-                        row.className = `px-1.5 py-0.5 rounded font-medium truncate ${shiftClass}`;
-                        row.innerText = `[${b.shift}] ${b.name}`;
-                        listContainer.appendChild(row);
+                    if (shiftList.length > 0) {
+                        const nameWrap = document.createElement('div');
+                        nameWrap.className = "flex flex-wrap gap-0.5 mt-0.5";
+                        shiftList.forEach(([id, b]) => {
+                            const btn = document.createElement('button');
+                            btn.className = "bg-white/80 hover:bg-white text-slate-700 px-1 py-0.5 rounded border border-slate-200 text-[9px] truncate max-w-[65px] transition cursor-pointer active:scale-95";
+                            btn.innerText = b.name;
+                            btn.onclick = (e) => { e.stopPropagation(); showBookingDetail(id); };
+                            nameWrap.appendChild(btn);
+                        });
+                        block.appendChild(nameWrap);
                     }
+                    overviewContainer.appendChild(block);
                 });
 
-                dayBox.appendChild(listContainer);
+                dayBox.appendChild(overviewContainer);
                 grid.appendChild(dayBox);
             }
         }
 
-        // Init
-        document.getElementById('shiftDate').value = new Date().toISOString().split('T')[0];
+        document.getElementById('shiftDate').value = new Date().toISOString().split('T');
         renderCalendar();
     </script>
 </body>
